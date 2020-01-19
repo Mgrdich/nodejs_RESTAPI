@@ -1,0 +1,8 @@
+{
+  "name": "nodejs_RESTAPI",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Mgrdich/nodejs_RESTAPI.git",
+  "author": "Mgrdich <mgotm13@gmail.com>",
+  "license": "MIT"
+}
