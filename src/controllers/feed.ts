@@ -1,8 +1,11 @@
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
 import {Post} from "../models/post";
+import {errorThrower} from "../util/functions";
 
 function getPosts(req: Request, res: Response, next: NextFunction) {
+
+
     res.status(200).json({
         posts: [
             {
@@ -23,10 +26,8 @@ function getPosts(req: Request, res: Response, next: NextFunction) {
 function createPost(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        res.json(422).json({
-            message: "Validation failed enter it again",
-            errors: errors.array()
-        })
+        const mes:string = "Validation failed, entered data is incorrect.";
+        errorThrower(next, mes, 422);
     }
     const title = req.body.title;
     const content = req.body.content;
@@ -45,7 +46,7 @@ function createPost(req: Request, res: Response, next: NextFunction) {
                 post: result
             })
         }).catch(function (err) {
-        console.log(err);
+        errorThrower(next, "",err.statusCode);
     });
 
 }
