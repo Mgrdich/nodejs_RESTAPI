@@ -23,7 +23,7 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
 app.use('/feed', feed);
 
 app.use(function (err:any, req:Request, res:Response, next:NextFunction) { //TODO check out the interface for error message
-    const status: number = err.statusCode;
+    const status: number = err.statusCode || 500;
     const message: string = err.message;
     res.status(status).json({message: message});
 });

@@ -5,28 +5,21 @@ import {errorThrower} from "../util/functions";
 
 function getPosts(req: Request, res: Response, next: NextFunction) {
 
-
-    res.status(200).json({
-        posts: [
-            {
-                _id: '1',
-                title: "First Post",
-                content: "this is the first post",
-                imageUrl: "images/mgo.JPG",
-                creator: {
-                    name: "Mgo"
-                },
-                createdAt: new Date()
-
-            }
-        ]
+    Post.find()
+        .then(function (posts) {
+            res.status(200).json({
+                    message: 'Fetched posts successfully.',
+                    posts: posts
+                });
+        }).catch(function (err) {
+        errorThrower(next, "", err.statusCode || 500);
     });
 }
 
 function createPost(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const mes:string = "Validation failed, entered data is incorrect.";
+        const mes: string = "Validation failed, entered data is incorrect.";
         errorThrower(next, mes, 422);
     }
     const title = req.body.title;
@@ -46,7 +39,7 @@ function createPost(req: Request, res: Response, next: NextFunction) {
                 post: result
             })
         }).catch(function (err) {
-        errorThrower(next, "",err.statusCode);
+        errorThrower(next, "", err.statusCode || 500);
     });
 
 }
