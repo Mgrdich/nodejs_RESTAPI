@@ -1,9 +1,15 @@
 import {NextFunction} from "express";
 
-const errorThrower = function (next: NextFunction, err:string, statusCode: number) {
-    const error = new Error(err);
+const errorThrower = function (errMessage: string, statusCode: number) {
+    const error = new Error(errMessage);
     error["statusCode"] = statusCode;
-    return next(error);
+    throw error;
 };
 
-export {errorThrower};
+const errorCatcher = function (next: NextFunction, err: Error) {
+    if (!err["statusCode"]) {
+        err["statusCode"] = 500;
+    }
+    next(err);
+};
+export {errorThrower, errorCatcher};

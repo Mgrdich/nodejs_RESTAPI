@@ -1,18 +1,18 @@
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
 import {Post} from "../models/post";
-import {errorThrower} from "../util/functions";
+import {errorCatcher, errorThrower} from "../util/functions";
 
 function getPosts(req: Request, res: Response, next: NextFunction) {
 
     Post.find()
         .then(function (posts) {
             res.status(200).json({
-                    message: 'Fetched posts successfully.',
-                    posts: posts
-                });
+                message: 'Fetched posts successfully.',
+                posts: posts
+            });
         }).catch(function (err) {
-        errorThrower(next, "", err.statusCode || 500);
+        // errorThrower(next, "", err.statusCode || 500);
     });
 }
 
@@ -20,10 +20,16 @@ function createPost(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const mes: string = "Validation failed, entered data is incorrect.";
-        errorThrower(next, mes, 422);
+        errorThrower(mes, 422);
     }
-    const title = req.body.title;
-    const content = req.body.content;
+/*
+    if (!req["file"]) {
+        errorThrower("No image", 422);
+    }
+*/
+    // const imageUrl: any = req["file"].path;
+    const title: string = req.body.title;
+    const content: string = req.body.content;
 
     const post = new Post({
         title, content,
@@ -39,9 +45,22 @@ function createPost(req: Request, res: Response, next: NextFunction) {
                 post: result
             })
         }).catch(function (err) {
-        errorThrower(next, "", err.statusCode || 500);
+        errorCatcher(next, err);
     });
 
 }
 
-export {getPosts, createPost};
+function getPost(req: Request, res: Response, next: NextFunction) {
+    const postId = req.params.postId;
+    Post.findById(postId)
+        .then(function (post) {
+            if (!post) {
+                errorThrower("Something is Wrong", 404);
+            }
+            res.status(200).json({message: "Post Fetched", post: post})
+        }).catch(function (err) {
+        errorCatcher(next, err);
+    });
+}
+
+export {getPosts, createPost, getPost};
