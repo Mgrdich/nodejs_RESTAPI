@@ -1,11 +1,11 @@
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
-import {Post} from "../models/post";
+import {Posts} from "../models/post";
 import {errorCatcher, errorThrower} from "../util/functions";
 
 function getPosts(req: Request, res: Response, next: NextFunction) {
 
-    Post.find()
+    Posts.find()
         .then(function (posts) {
             res.status(200).json({
                 message: 'Fetched posts successfully.',
@@ -31,7 +31,7 @@ function createPost(req: Request, res: Response, next: NextFunction) {
     const title: string = req.body.title;
     const content: string = req.body.content;
 
-    const post = new Post({
+    const post = new Posts({
         title, content,
         imageUrl: 'images/mgo.JPG',
         creator: {
@@ -52,7 +52,7 @@ function createPost(req: Request, res: Response, next: NextFunction) {
 
 function getPost(req: Request, res: Response, next: NextFunction) {
     const postId = req.params.postId;
-    Post.findById(postId)
+    Posts.findById(postId)
         .then(function (post) {
             if (!post) {
                 errorThrower("Something is Wrong", 404);
@@ -78,7 +78,7 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
           errorThrower("No File Picked", 422);
       }
     */
-    Post.findById(postId)
+    Posts.findById(postId)
         .then(function (post) {
             if (!post) {
                 errorThrower("Not Found", 422);
@@ -96,7 +96,7 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
 
 function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if image upload is done correctly change this code to delete the image
     const postId = req.params.postId;
-    Post.deleteOne({_id: postId})
+    Posts.deleteOne({_id: postId})
         .then(function () {
             res.status(200).json({message: 'Post Deleted'});
         }).catch(function (err) {

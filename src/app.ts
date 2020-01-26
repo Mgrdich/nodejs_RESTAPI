@@ -3,6 +3,7 @@ import * as bodyParser from "body-parser";
 import * as path from "path";
 import * as multer from "multer";
 import feed from "./routes/feed";
+import auth from "./routes/auth";
 import {NextFunction, Request, Response} from "express";
 import * as mongoose from "mongoose";
 import {MONGODB_URI} from "./util/constants";
@@ -36,7 +37,7 @@ app.use(bodyParser.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use(
-    multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
+    multer({storage: fileStorage, fileFilter: fileFilter}).single('image')
 );
 
 app.use(function (req: Request, res: Response, next: NextFunction) {
@@ -51,7 +52,8 @@ app.use('/feed', feed);
 app.use(function (err: any, req: Request, res: Response, next: NextFunction) { //TODO check out the interface for error message
     const status: number = err.statusCode || 500;
     const message: string = err.message;
-    res.status(status).json({message: message});
+    const data = err.data;
+    res.status(status).json({message, data});
 });
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true})

@@ -1,8 +1,9 @@
 import {NextFunction} from "express";
 
-const errorThrower = function (errMessage: string, statusCode: number) {
+const errorThrower = function (errMessage: string, statusCode: number,data?:Array<any>) {
     const error = new Error(errMessage);
     error["statusCode"] = statusCode;
+    error["data"] = data;
     throw error;
 };
 
