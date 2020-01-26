@@ -2,7 +2,7 @@ import {User} from "../models/user";
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
 import {errorCatcher, errorThrower} from "../util/functions";
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcrypt";
 
 
 function signUp(req: Request, res: Response, next: NextFunction) {
