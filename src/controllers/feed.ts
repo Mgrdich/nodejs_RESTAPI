@@ -22,18 +22,18 @@ function createPost(req: Request, res: Response, next: NextFunction) {
         const mes: string = "Validation failed, entered data is incorrect.";
         errorThrower(mes, 422);
     }
-/*
-    if (!req["file"]) {
-        errorThrower("No image", 422);
-    }
-*/
+    /*
+        if (!req["file"]) {   //TODO check out the image issue
+            errorThrower("No image", 422);
+        }
+    */
     // const imageUrl: any = req["file"].path;
     const title: string = req.body.title;
     const content: string = req.body.content;
 
     const post = new Post({
         title, content,
-        imageUrl: "images/mgo.JPG",
+        imageUrl: 'images/mgo.JPG',
         creator: {
             name: "Mgo"
         },
@@ -63,4 +63,45 @@ function getPost(req: Request, res: Response, next: NextFunction) {
     });
 }
 
-export {getPosts, createPost, getPost};
+function updatePost(req: Request, res: Response, next: NextFunction) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const mes: string = "Validation failed, entered data is incorrect.";
+        errorThrower(mes, 422);
+    }
+    const postId = req.params.postId;
+    let {title, content, image} = req.body;
+    /*  if (req["file"]) {
+          image = req["file"].path;
+      }
+      if (!image) {
+          errorThrower("No File Picked", 422);
+      }
+    */
+    Post.findById(postId)
+        .then(function (post) {
+            if (!post) {
+                errorThrower("Not Found", 422);
+            }
+            post.title = title;
+            post.content = content;
+            post.imageUrl = 'images/mgo.JPG';
+            return post.save()
+        }).then(function (result) {
+        res.status(200).json({message: 'Post Updated', post: result})
+    }).catch(function (err) {
+        errorCatcher(next, err);
+    })
+}
+
+function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if image upload is done correctly change this code to delete the image
+    const postId = req.params.postId;
+    Post.deleteOne({_id: postId})
+        .then(function () {
+            res.status(200).json({message: 'Post Deleted'});
+        }).catch(function (err) {
+        errorCatcher(next, err);
+    })
+}
+
+export {getPosts, createPost, getPost, updatePost, deletePost};

@@ -26,11 +26,18 @@ const fileFilter = function (req: Request, file: any, cb: Function) {
     cb(null, false);
 };
 
+
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
+
 app.use(bodyParser.json());
 
-app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single('image'));
-
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+app.use(
+    multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
+);
 
 app.use(function (req: Request, res: Response, next: NextFunction) {
     res.setHeader('Access-Control-Allow-Origin', '*');
