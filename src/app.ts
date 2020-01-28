@@ -6,7 +6,7 @@ import feedRoutes from "./routes/feed";
 import authRoutes from "./routes/auth";
 import {NextFunction, Request, Response} from "express";
 import * as mongoose from "mongoose";
-import {MONGODB_URI} from "./util/constants";
+import {MONGODB_URI, PORT_NUMBER} from "./util/constants";
 
 
 const app = express();
@@ -60,7 +60,7 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) { /
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(function () {
-        app.listen(8080);
+        app.listen(PORT_NUMBER);
     }).catch(function (err) {
     console.log(err);
 });

@@ -101,6 +101,9 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
             if (!post) {
                 errorThrower("Not Found", 422);
             }
+            if (post.creator.toString() !== req["userId"]) {
+                errorThrower("Not Authorized", 403);
+            }
             post.title = title;
             post.content = content;
             post.imageUrl = 'images/mgo.JPG';
@@ -113,11 +116,26 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
 }
 
 function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if image upload is done correctly change this code to delete the image
-    const postId = req.params.postId;
-    Posts.deleteOne({_id: postId})
-        .then(function () {
-            res.status(200).json({message: 'Post Deleted'});
-        }).catch(function (err) {
+    const postId:any = req.params.postId; //bcz user pull linter expect object id
+    Posts.findById(postId)
+        .then(function (post) {
+            if (!post) {
+                errorThrower("Not Found", 422);
+            }
+            if (post.creator.toString() !== req["userId"]) {
+                errorThrower("Not Authorized", 403);
+            }
+            let pr1 = Posts.findOneAndDelete(postId);
+            let pr2 = User.findById(req["userId"]).then(function (user) {
+                user.posts.pull(postId);
+                return user.save();
+            }).catch(function (err: Error) {
+                errorCatcher(next, err);
+            });
+            return Promise.all([pr1, pr2]);
+        }).then(function () {
+        res.status(200).json({message: 'Post Deleted'});
+    }).catch(function (err) {
         errorCatcher(next, err);
     })
 }
