@@ -2,18 +2,28 @@ import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
 import {Posts} from "../models/post";
 import {errorCatcher, errorThrower} from "../util/functions";
+import {ITEMS_PER_PAGE} from "../util/constants";
 
 function getPosts(req: Request, res: Response, next: NextFunction) {
 
+    const currentPage: number = req.query.page || 1;
+    let totalItems: number;
     Posts.find()
-        .then(function (posts) {
-            res.status(200).json({
-                message: 'Fetched posts successfully.',
-                posts: posts
-            });
-        }).catch(function (err) {
-        // errorThrower(next, "", err.statusCode || 500);
-    });
+        .countDocuments()
+        .then(function (count) {
+            totalItems = count;
+            return Posts.find()
+                .skip((currentPage - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
+        }).then(function (posts) {
+        res.status(200).json({
+            message: 'Fetched posts successfully.',
+            posts: posts,
+            totalItems:totalItems
+        });
+    }).catch(function (err) {
+        errorCatcher(next, err);
+    })
 }
 
 function createPost(req: Request, res: Response, next: NextFunction) {

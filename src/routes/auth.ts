@@ -1,6 +1,6 @@
 import * as express from "express";
 import {body} from "express-validator";
-import {signUp} from "../controllers/auth";
+import {signUp,logIn} from "../controllers/auth";
 import {User} from "../models/user";
 
 const router = express.Router();
@@ -24,5 +24,7 @@ router.put('/signup', [
         .trim()
         .isLength({min: 5})
 ], signUp);
+
+router.post('/login',logIn);
 
 export default router;
