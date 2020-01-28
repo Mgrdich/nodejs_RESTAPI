@@ -1,5 +1,7 @@
 const MONGODB_URI:string = "mongodb://localhost:27017/RestApi_Messages";
 
-const ITEMS_PER_PAGE:any = 2;
+const tokenPrivateKey:string = "somesuperSecretKey"; //TODO change this to read from a secret file
 
-export {MONGODB_URI,ITEMS_PER_PAGE};
+const ITEMS_PER_PAGE:number = 2;
+
+export {MONGODB_URI,ITEMS_PER_PAGE,tokenPrivateKey};

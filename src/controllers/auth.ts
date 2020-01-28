@@ -4,6 +4,7 @@ import {validationResult} from "express-validator";
 import {errorCatcher, errorThrower} from "../util/functions";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
+import {tokenPrivateKey} from "../util/constants";
 
 function signUp(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
@@ -47,7 +48,7 @@ function logIn(req: Request, res: Response, next: NextFunction) {
                 email: loadedUser.email,
                 userId: loadedUser._id.toString()
             },
-            "somesuperSecretKey", {
+            tokenPrivateKey, {
                 expiresIn: '1h'
             }
         );

@@ -1,6 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
 import {Posts} from "../models/post";
+import {User} from "../models/user";
 import {errorCatcher, errorThrower} from "../util/functions";
 import {ITEMS_PER_PAGE} from "../util/constants";
 
@@ -19,7 +20,7 @@ function getPosts(req: Request, res: Response, next: NextFunction) {
         res.status(200).json({
             message: 'Fetched posts successfully.',
             posts: posts,
-            totalItems:totalItems
+            totalItems: totalItems
         });
     }).catch(function (err) {
         errorCatcher(next, err);
@@ -41,20 +42,27 @@ function createPost(req: Request, res: Response, next: NextFunction) {
     const title: string = req.body.title;
     const content: string = req.body.content;
 
+    let creator: any;
+
     const post = new Posts({
         title, content,
         imageUrl: 'images/mgo.JPG',
-        creator: {
-            name: "Mgo"
-        },
+        creator: req["userId"],
     });
     post.save()
         .then(function (result) {
-            res.status(201).json({
-                message: "Post created successfully",
-                post: result
-            })
-        }).catch(function (err) {
+            return User.findById(req["userId"])
+        }).then(function (user) {
+        creator = user;
+        user.posts.push(post);
+        return user.save();
+    }).then(function (result) {
+        res.status(201).json({
+            message: "Post created successfully",
+            post: post,
+            creator: {_id: creator._id.toString(), name: creator.name}
+        })
+    }).catch(function (err) {
         errorCatcher(next, err);
     });
 
