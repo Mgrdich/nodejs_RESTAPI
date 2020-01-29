@@ -37,7 +37,7 @@ function logIn(req: Request, res: Response, next: NextFunction) {
                 errorThrower(mess, 401); //Not Authenticated
             }
             loadedUser = user;
-            return bcrypt.compare(password, user.password);
+            return bcrypt.compare(password, user["password"]);
         }).then(function (isEqual: boolean) {
         if (!isEqual) {
             let mess = "Wrong Password";

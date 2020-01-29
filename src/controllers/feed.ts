@@ -16,6 +16,7 @@ async function getPosts(req: Request, res: Response, next: NextFunction) {
 
         const posts = await Posts.find()
             .populate('creator')
+            .sort({createdAt: -1})
             .skip((currentPage - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE);
 
@@ -51,22 +52,22 @@ async function createPost(req: Request, res: Response, next: NextFunction) {
         imageUrl: 'images/mgo.JPG',
         creator: req["userId"],
     });
-    try {
+    try { //TODO all object take into consideration interfaces so no linter errors
         await post.save();
         const user = await User.findById(req["userId"]);
-        user.posts.push(post);
+        user["posts"].push(post);
         await user.save();
         io.getIO().emit('posts', {
             action: 'create', post: {
-                ...post._doc, creator: {
-                    _id: req["userId"], name: user.name
+                ...post["_doc"], creator: {
+                    _id: req["userId"], name: user['name']
                 }
             }
         });
         res.status(201).json({
             message: 'Post created successfully!',
             post: post,
-            creator: {_id: user._id, name: user.name}
+            creator: {_id: user._id, name: user["name"]}
         });
     } catch (err) {
         errorCatcher(next, err);
@@ -76,11 +77,6 @@ async function createPost(req: Request, res: Response, next: NextFunction) {
 
 async function getPost(req: Request, res: Response, next: NextFunction) {
     const postId = req.params.postId;
-    Posts.findById(postId)
-        .then(function (post) {
-        }).catch(function (err) {
-
-    });
     try {
         const post = await Posts.findById(postId);
         if (!post) {
@@ -113,17 +109,17 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
             if (!post) {
                 errorThrower("Not Found", 422);
             }
-            if (post.creator._id.toString() !== req["userId"]) {
+            if (post["creator"]._id.toString() !== req["userId"]) {
                 errorThrower("Not Authorized", 403);
             }
-            post.title = title;
-            post.content = content;
-            post.imageUrl = 'images/mgo.JPG';
+            post["title"] = title;
+            post["content"] = content;
+            post["imageUrl"] = 'images/mgo.JPG';
             return post.save()
         }).then(function (result) {
         io.getIO().emit('posts', {
             action: 'delete',
-            post:result
+            post: result
         });
         res.status(200).json({message: 'Post Updated', post: result})
     }).catch(function (err) {
@@ -131,6 +127,7 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
     })
 }
 
+//TODO fix the delete 
 function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if image upload is done correctly change this code to delete the image
     const postId: any = req.params.postId; //bcz user pull linter expect object id
     Posts.findById(postId)
@@ -138,18 +135,22 @@ function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if
             if (!post) {
                 errorThrower("Not Found", 422);
             }
-            if (post.creator.toString() !== req["userId"]) {
+            if (post["creator"].toString() !== req["userId"]) {
                 errorThrower("Not Authorized", 403);
             }
             let pr1 = Posts.findOneAndDelete(postId);
             let pr2 = User.findById(req["userId"]).then(function (user) {
-                user.posts.pull(postId);
+                user["posts"].pull(postId);
                 return user.save();
             }).catch(function (err: Error) {
                 errorCatcher(next, err);
             });
             return Promise.all([pr1, pr2]);
         }).then(function () {
+        io.getIO().emit('posts', {
+            action: 'delete',
+            post: postId
+        });
         res.status(200).json({message: 'Post Deleted'});
     }).catch(function (err) {
         errorCatcher(next, err);
