@@ -5,29 +5,27 @@ import {User} from "../models/user";
 import {errorCatcher, errorThrower} from "../util/functions";
 import {ITEMS_PER_PAGE} from "../util/constants";
 
-function getPosts(req: Request, res: Response, next: NextFunction) {
+async function getPosts(req: Request, res: Response, next: NextFunction) {
 
     const currentPage: number = req.query.page || 1;
-    let totalItems: number;
-    Posts.find()
-        .countDocuments()
-        .then(function (count) {
-            totalItems = count;
-            return Posts.find()
-                .skip((currentPage - 1) * ITEMS_PER_PAGE)
-                .limit(ITEMS_PER_PAGE)
-        }).then(function (posts) {
+    try {
+        const totalItems = await Posts.find().countDocuments();
+
+        const posts = await Posts.find()
+            .skip((currentPage - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE);
+
         res.status(200).json({
             message: 'Fetched posts successfully.',
             posts: posts,
             totalItems: totalItems
         });
-    }).catch(function (err) {
+    } catch (err) {
         errorCatcher(next, err);
-    })
+    }
 }
 
-function createPost(req: Request, res: Response, next: NextFunction) {
+async function createPost(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const mes: string = "Validation failed, entered data is incorrect.";
@@ -49,36 +47,39 @@ function createPost(req: Request, res: Response, next: NextFunction) {
         imageUrl: 'images/mgo.JPG',
         creator: req["userId"],
     });
-    post.save()
-        .then(function (result) {
-            return User.findById(req["userId"])
-        }).then(function (user) {
-        creator = user;
+    try {
+        await post.save();
+        const user = await User.findById(req["userId"]);
         user.posts.push(post);
-        return user.save();
-    }).then(function (result) {
+        await user.save();
         res.status(201).json({
-            message: "Post created successfully",
+            message: 'Post created successfully!',
             post: post,
-            creator: {_id: creator._id.toString(), name: creator.name}
-        })
-    }).catch(function (err) {
+            creator: {_id: user._id, name: user.name}
+        });
+    } catch (err) {
         errorCatcher(next, err);
-    });
+    }
 
 }
 
-function getPost(req: Request, res: Response, next: NextFunction) {
+async function getPost(req: Request, res: Response, next: NextFunction) {
     const postId = req.params.postId;
     Posts.findById(postId)
         .then(function (post) {
-            if (!post) {
-                errorThrower("Something is Wrong", 404);
-            }
-            res.status(200).json({message: "Post Fetched", post: post})
         }).catch(function (err) {
-        errorCatcher(next, err);
+
     });
+    try {
+        const post = await Posts.findById(postId);
+        if (!post) {
+            errorThrower("Something is Wrong", 404);
+        }
+        res.status(200).json({message: "Post Fetched", post: post})
+
+    } catch (err) {
+        errorCatcher(next, err);
+    }
 }
 
 function updatePost(req: Request, res: Response, next: NextFunction) {
@@ -116,7 +117,7 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
 }
 
 function deletePost(req: Request, res: Response, next: NextFunction) { //TODO if image upload is done correctly change this code to delete the image
-    const postId:any = req.params.postId; //bcz user pull linter expect object id
+    const postId: any = req.params.postId; //bcz user pull linter expect object id
     Posts.findById(postId)
         .then(function (post) {
             if (!post) {
