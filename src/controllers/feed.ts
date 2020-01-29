@@ -1,9 +1,12 @@
 import {NextFunction, Request, Response} from "express";
 import {validationResult} from "express-validator";
-import {Posts} from "../models/post";
-import {User} from "../models/user";
 import {errorCatcher, errorThrower} from "../util/functions";
 import {ITEMS_PER_PAGE} from "../util/constants";
+
+import {Posts} from "../models/post";
+import {User} from "../models/user";
+
+const io = require('../socket');
 
 async function getPosts(req: Request, res: Response, next: NextFunction) {
 
@@ -12,6 +15,7 @@ async function getPosts(req: Request, res: Response, next: NextFunction) {
         const totalItems = await Posts.find().countDocuments();
 
         const posts = await Posts.find()
+            .populate('creator')
             .skip((currentPage - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE);
 
@@ -52,6 +56,13 @@ async function createPost(req: Request, res: Response, next: NextFunction) {
         const user = await User.findById(req["userId"]);
         user.posts.push(post);
         await user.save();
+        io.getIO().emit('posts', {
+            action: 'create', post: {
+                ...post._doc, creator: {
+                    _id: req["userId"], name: user.name
+                }
+            }
+        });
         res.status(201).json({
             message: 'Post created successfully!',
             post: post,
@@ -97,12 +108,12 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
           errorThrower("No File Picked", 422);
       }
     */
-    Posts.findById(postId)
+    Posts.findById(postId).populate('creator')
         .then(function (post) {
             if (!post) {
                 errorThrower("Not Found", 422);
             }
-            if (post.creator.toString() !== req["userId"]) {
+            if (post.creator._id.toString() !== req["userId"]) {
                 errorThrower("Not Authorized", 403);
             }
             post.title = title;
@@ -110,6 +121,10 @@ function updatePost(req: Request, res: Response, next: NextFunction) {
             post.imageUrl = 'images/mgo.JPG';
             return post.save()
         }).then(function (result) {
+        io.getIO().emit('posts', {
+            action: 'delete',
+            post:result
+        });
         res.status(200).json({message: 'Post Updated', post: result})
     }).catch(function (err) {
         errorCatcher(next, err);

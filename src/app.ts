@@ -60,7 +60,11 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) { /
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(function () {
-        app.listen(PORT_NUMBER);
+        const server = app.listen(PORT_NUMBER);
+        const io = require('./socket').init(server);
+        io.on('connection',function (socket) {
+            console.log('Client connected');
+        })
     }).catch(function (err) {
     console.log(err);
 });
